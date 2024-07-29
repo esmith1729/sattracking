@@ -36,7 +36,7 @@ const double EARTH_RADIUS = 6378.137;  // km
 const double EARTH_FLATTENING = 1.0 / 298.257223563;
 
 // Function to calculate azimuth and elevation
-std::pair<double, double> calculateAzimuthElevation(const libsgp4::Eci& eci) {
+/**std::pair<double, double> calculateAzimuthElevation(const libsgp4::Eci& eci) {
     // Convert antenna location to ECEF
     double phi = ANTENNA_LAT * DEG_TO_RAD;
     double lambda = ANTENNA_LON * DEG_TO_RAD;
@@ -73,46 +73,72 @@ std::pair<double, double> calculateAzimuthElevation(const libsgp4::Eci& eci) {
     double el_deg = el * RAD_TO_DEG;
 
     return std::make_pair(az_deg, el_deg);
+}*/
+
+std::pair<double, double> calculateAzimuthElevation(const libsgp4::Eci& eci, const libsgp4::CoordGeodetic& observer_geo) {
+    // Create an observer at the antenna location
+    libsgp4::Observer observer(observer_geo);
+
+    // Get the look angle from the observer to the satellite
+    libsgp4::CoordTopocentric topo = observer.GetLookAngle(eci);
+
+    // Convert to degrees
+    double az_deg = topo.azimuth * RAD_TO_DEG;
+    double el_deg = topo.elevation * RAD_TO_DEG;
+
+    return std::make_pair(az_deg, el_deg);
 }
 
 
 int main() {
-    // TLE data for ISS
-    //std::string line1 = "1 25544U 98067A   20344.52777778  .00016717  00000-0  10270-3 0  9000";
-    //std::string line2 = "2 25544  51.6442  21.5556 0002000  0.0000  0.0000 15.49120000  9000";
-    std::string line1 = "1 47281U 20100Z   24198.85747037  .00000008  00000+0 -12866-4 0  9995";
-    std::string line2 = "2 47281  87.8956 130.1349 0001887  62.3860 297.7459 13.12446009172875";
+    // TLE data 
+    std::string line1 = "1 55821U 23029AB  24201.16146330  .00000300  00000+0  77384-3 0  9994";
+    std::string line2 = "2 55821  87.8941  68.6073 0002168  71.0045 289.1320 13.14501882 68376";
 
 
     // Create satellite object
     libsgp4::Tle Tle(line1, line2);
 
+    //Create Observer object
+    libsgp4::CoordGeodetic observer_geo(ANTENNA_LAT, ANTENNA_LON, ANTENNA_ALT);
+
+    // Use specific epoch (J2000.0)
+    libsgp4::DateTime epoch = Tle.Epoch();
+
+    //Create SGP4 propagator
+    libsgp4::SGP4 sgp4(Tle);
+
     // Get current time
     auto now = std::chrono::system_clock::now();
-    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    struct tm* timeinfo = std::gmtime(&now_c);
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm* now_tm = std::gmtime(&now_time_t);  // Use gmtime for UTC
 
     // Calculate and print azimuth and elevation for the next hour
-    for (int i = 0; i < 60; ++i) {
+    for (int i = 0; i < 120; ++i) {
         // Calculate Julian Date
-        libsgp4::DateTime dt(timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday,
-                    timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-        double jd = dt.ToJulian();
+        //libsgp4::DateTime dt(now_tm->tm_year + 1900, now_tm->tm_mon + 1, now_tm->tm_mday,
+        //            now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
+        libsgp4::DateTime dt = epoch.AddMinutes(i);
+        //double jd = dt.ToJulian();
 
         // Get satellite position
-        libsgp4::SGP4 sgp4(Tle);
-        libsgp4::Eci eci = sgp4.FindPosition(jd);
+        libsgp4::Eci eci = sgp4.FindPosition(dt);
+
+        // Convert satellite position to geodetic coordinates
+        libsgp4::CoordGeodetic geo = eci.ToGeodetic();
 
         // Calculate azimuth and elevation
-        auto [az, el] = calculateAzimuthElevation(eci);
+        auto [az, el] = calculateAzimuthElevation(eci, observer_geo);
 
         // Print results
-        std::cout << "Time: " << std::put_time(timeinfo, "%Y-%m-%d %H:%M:%S") << " UTC\n";
+        std::cout << "Time since epoch: " << i << " minutes\n";
+        std::cout << "Time: " << std::put_time(now_tm, "%Y-%m-%d %H:%M:%S") << " UTC\n";
         std::cout << "Azimuth: " << std::fixed << std::setprecision(2) << az << "°, Elevation: " << el << "°\n\n";
-
+        std::cout << "Satellite Lat: " << eci.ToGeodetic().latitude << "°, Lon: " << eci.ToGeodetic().longitude << "°, Alt: " << eci.ToGeodetic().altitude << " km\n\n";
+        
         // Increment time by 1 minute
-        timeinfo->tm_min += 1;
-        std::mktime(timeinfo);
+        now_time_t += 60;  // Add 60 seconds
+        now_tm = std::gmtime(&now_time_t);  // Update now_tm with new time
     }
 
     return 0;
