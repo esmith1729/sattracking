@@ -37,20 +37,6 @@ const double FREQ_GHZ = 20.0;  // GHz
 const double EARTH_RADIUS = 6378.137;  // km
 const double EARTH_FLATTENING = 1.0 / 298.257223563;
 
-std::pair<double, double> calculateAzimuthElevation(const libsgp4::Eci& eci, const libsgp4::CoordGeodetic& observer_geo) {
-    // Create an observer at the antenna location
-    libsgp4::Observer observer(observer_geo);
-
-    // Get the look angle from the observer to the satellite
-    libsgp4::CoordTopocentric topo = observer.GetLookAngle(eci);
-
-    // Convert to degrees
-    double az_deg = topo.azimuth * RAD_TO_DEG;
-    double el_deg = topo.elevation * RAD_TO_DEG;
-
-    return std::make_pair(az_deg, el_deg);
-}
-
 int main() {
     //Get TLE from TLE.txt
     std::ifstream file("TLE.txt");
@@ -105,14 +91,11 @@ int main() {
         // Get satellite position
         libsgp4::Eci eci = sgp4.FindPosition(dt);
 
-        // Get look angle
+        // Get look angles, azimuth and elevation
         libsgp4::CoordTopocentric topo = obs.GetLookAngle(eci);
 
         // Convert satellite position to geodetic coordinates
         libsgp4::CoordGeodetic geo = eci.ToGeodetic();
-
-        // Calculate azimuth and elevation
-        //auto [az, el] = calculateAzimuthElevation(eci, observer_geo);
 
         // Print results
         
@@ -123,9 +106,6 @@ int main() {
             std::cout << topo << std::endl;
             std::cout << geo << " " << std::endl;
         }
-        
-        //std::cout << "Azimuth: " << std::fixed << std::setprecision(2) << az << "°, Elevation: " << el << "°\n\n";
-        //std::cout << "Satellite Lat: " << eci.ToGeodetic().latitude << "°, Lon: " << eci.ToGeodetic().longitude << "°, Alt: " << eci.ToGeodetic().altitude << " km\n\n";
         
         // Increment time by 1 minute
         now_time_t += 60;  // Add 60 second
