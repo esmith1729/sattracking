@@ -20,23 +20,6 @@
 #include "C:/Users/smith/Projects/sgp4/libsgp4/CoordGeodetic.h"
 #include "C:/Users/smith/Projects/sgp4/libsgp4/Observer.h"
 
-// Constants
-const double PI = 3.14159265358979323846;
-const double DEG_TO_RAD = PI / 180.0;
-const double RAD_TO_DEG = 180.0 / PI;
-
-// Antenna location (example: Oxford, England)
-const double ANTENNA_LAT = 51.7520;  // degrees North
-const double ANTENNA_LON = -1.2577;  // degrees East
-const double ANTENNA_ALT = 0.065;    // km above sea level
-
-// Antenna operating frequency
-const double FREQ_GHZ = 20.0;  // GHz
-
-// Earth parameters
-const double EARTH_RADIUS = 6378.137;  // km
-const double EARTH_FLATTENING = 1.0 / 298.257223563;
-
 int main() {
     //Get TLE from TLE.txt
     std::ifstream file("TLE.txt");
@@ -59,14 +42,13 @@ int main() {
     }
     file.close();
     
-    // TLE data & 
-    // Create satellite object
+    // TLE data & Create satellite object
     libsgp4::Tle Tle(line1, line2);
 
+    // Print out TLE information to terminal
     std::cout << Tle << std::endl;
  
     //Create Observer object
-    libsgp4::CoordGeodetic observer_geo(ANTENNA_LAT, ANTENNA_LON, ANTENNA_ALT);
     libsgp4::Observer obs(51.507406923983446, -0.12773752212524414, 0.05);
 
     // Use specific epoch (J2000.0)
@@ -80,13 +62,11 @@ int main() {
     auto now_time_t = std::chrono::system_clock::to_time_t(now);
     std::tm* now_tm = std::gmtime(&now_time_t);  // Use gmtime for UTC
 
-    // Calculate and print azimuth and elevation for the next hour
+    // Calculate and print azimuth and elevation for the next 900 mins
     for (int i = 0; i < 900; ++i) {
         // Calculate Julian Date
         libsgp4::DateTime dt(now_tm->tm_year + 1900, now_tm->tm_mon + 1, now_tm->tm_mday,
                     now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
-        
-        double jd = dt.ToJulian();
 
         // Get satellite position
         libsgp4::Eci eci = sgp4.FindPosition(dt);
