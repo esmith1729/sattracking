@@ -1,4 +1,0 @@
-Satellite tracking algorithm which returns a look angle direction for an antenna to point toward, given:
-GPS location of antenna
-TLE of satellite
-Datetime
