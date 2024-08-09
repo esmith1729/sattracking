@@ -10,13 +10,37 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <vector>
 #include "SGP4\libsgp4\SGP4.h"
 #include "SGP4\libsgp4\Eci.h"
 #include "SGP4\libsgp4\CoordTopocentric.h"
 #include "SGP4\libsgp4\CoordGeodetic.h"
 #include "SGP4\libsgp4\Observer.h"
 
+std::vector<int> getLineNumbers(std::string fileName) {
+    int lineCount = 0;
+    std::string line;
+    std::vector<int> result;
+
+    std::ifstream file(fileName);
+    if(!file.is_open()) {
+        std::cerr << "Unable to open file" << std::endl;
+    }
+    while (std::getline(file, line)) {
+        lineCount++;
+    }
+    std::cout<< lineCount << std::endl;
+    return result;
+}
+
+std::vector<libsgp4::Tle> createTLEArray(const std::vector<int>& lineNumbers, std::ifstream file) {
+    std::vector<libsgp4::Tle> result;
+
+    return result;
+}
+
 int main() {
+    getLineNumbers("TLE.txt");
     //Get TLE from TLE.txt
     std::ifstream file("TLE.txt");
     if(!file.is_open()) {
