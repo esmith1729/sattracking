@@ -17,3 +17,15 @@ License
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
+Building
+========
+
+   Using Mingw32-make and cmake, in a MinGW64 Terminal, run the following: 
+
+   `mkdir build`
+   `cd build` 
+   `cmake -G "MinGW Makefiles" ..`
+   `mingw32-make`
+
+This should build all of the C++ binaries into the `build` directory, and allow for use of the SGP4 headers into Sattrack's code

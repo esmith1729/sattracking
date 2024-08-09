@@ -7,18 +7,14 @@
  * position in its orbit
  */
 
-#include <iostream>
 #include <fstream>
 #include <string>
-#include <iomanip>
-#include <cmath>
 #include <chrono>
-#include <C:/Users/smith/Projects/sgp4/libsgp4/SGP4.h>
-#include <C:/Users/smith/Projects/sgp4/libsgp4/Eci.h>
-#include <C:/Program Files/Eigen/eigen-3.4.0/Eigen/Dense>
-#include "C:/Users/smith/Projects/sgp4/libsgp4/CoordTopocentric.h"
-#include "C:/Users/smith/Projects/sgp4/libsgp4/CoordGeodetic.h"
-#include "C:/Users/smith/Projects/sgp4/libsgp4/Observer.h"
+#include "SGP4\libsgp4\SGP4.h"
+#include "SGP4\libsgp4\Eci.h"
+#include "SGP4\libsgp4\CoordTopocentric.h"
+#include "SGP4\libsgp4\CoordGeodetic.h"
+#include "SGP4\libsgp4\Observer.h"
 
 int main() {
     //Get TLE from TLE.txt
