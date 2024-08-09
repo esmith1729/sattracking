@@ -21,7 +21,7 @@ License
 Building
 ========
 
-   Using Mingw32-make and cmake, in a MinGW64 Terminal, run the following: 
+   Using Mingw32-make and cmake, in a MinGW64 Terminal, run the following *from this SGP4 directory*: 
 
    `mkdir build`
    
