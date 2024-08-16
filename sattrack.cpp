@@ -12,78 +12,63 @@
 #include <chrono>
 #include <vector>
 #include "SGP4\libsgp4\SGP4.h"
+#include "SGP4\libsgp4\Tle.h"
 #include "SGP4\libsgp4\Eci.h"
 #include "SGP4\libsgp4\CoordTopocentric.h"
 #include "SGP4\libsgp4\CoordGeodetic.h"
 #include "SGP4\libsgp4\Observer.h"
 
-std::vector<int> getLineNumbers(std::string fileName) {
-    int lineCount = 0;
+std::vector<libsgp4::Tle> createTLEVector(std::string fileName) {
     std::string line;
-    std::vector<int> result;
+    std::vector<libsgp4::Tle> result;
+    std::string one = "1";
+    std::string two = "2";
+    std::string line1;
+    std::string line2;
 
     std::ifstream file(fileName);
     if(!file.is_open()) {
         std::cerr << "Unable to open file" << std::endl;
     }
     while (std::getline(file, line)) {
-        lineCount++;
-    }
-    std::cout<< lineCount << std::endl;
-    return result;
-}
-
-std::vector<libsgp4::Tle> createTLEArray(const std::vector<int>& lineNumbers, std::ifstream file) {
-    std::vector<libsgp4::Tle> result;
-
+        if(line[0] == one[0]) {
+            line1 = line;
+        }
+        else if(line[0] == two[0]) {
+            line2 = line;
+            libsgp4::Tle Tle(line1, line2);
+            result.emplace_back(Tle);
+        }
+        else {
+            line1 = "";
+            line2 = "";
+            continue;
+        }
+    }    
     return result;
 }
 
 int main() {
-    getLineNumbers("TLE.txt");
-    //Get TLE from TLE.txt
-    std::ifstream file("TLE.txt");
-    if(!file.is_open()) {
-        std::cerr << "Unable to open TLE file" << std::endl;
-        return 1;
-    }
-    std::string line1 = "";
-    std::string line2 = "";
-    std::string line;
-    int lineNumber = 0;
-
-    while(std::getline(file, line)) {
-        lineNumber++;
-        if (lineNumber ==2) {
-            line1 = line;
-        } else if (lineNumber == 3) {
-            line2 = line;
-        }
-    }
-    file.close();
-    
-    // TLE data & Create satellite object
-    libsgp4::Tle Tle(line1, line2);
-
-    // Print out TLE information to terminal
-    std::cout << Tle << std::endl;
- 
+    int observableSatellites = 0;
+    //Get TLEs from TLE.txt and put into Array
+    std::vector<libsgp4::Tle> TleVector = createTLEVector("TLE.txt");
     //Create Observer object
     libsgp4::Observer obs(51.507406923983446, -0.12773752212524414, 0.05);
+    
+    for(auto const &tle : TleVector) {    
+        
+        // Use specific epoch (J2000.0)
+        libsgp4::DateTime epoch = tle.Epoch();
 
-    // Use specific epoch (J2000.0)
-    libsgp4::DateTime epoch = Tle.Epoch();
+        //Create SGP4 propagator
+        libsgp4::SGP4 sgp4(tle);
 
-    //Create SGP4 propagator
-    libsgp4::SGP4 sgp4(Tle);
+        // Get current time
+        auto now = std::chrono::system_clock::now();
+        auto now_time_t = std::chrono::system_clock::to_time_t(now);
+        std::tm* now_tm = std::gmtime(&now_time_t);  // Use gmtime for UTC
 
-    // Get current time
-    auto now = std::chrono::system_clock::now();
-    auto now_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm* now_tm = std::gmtime(&now_time_t);  // Use gmtime for UTC
-
-    // Calculate and print azimuth and elevation for the next 900 mins
-    for (int i = 0; i < 900; ++i) {
+        // Calculate and print azimuth and elevation for all TLEs with elevation above 25 degrees
         // Calculate Julian Date
         libsgp4::DateTime dt(now_tm->tm_year + 1900, now_tm->tm_mon + 1, now_tm->tm_mday,
                     now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
@@ -98,19 +83,14 @@ int main() {
         libsgp4::CoordGeodetic geo = eci.ToGeodetic();
 
         // Print results
-        
-        //std::cout << "Time: " << std::put_time(now_tm, "%Y-%m-%d %H:%M:%S") << " UTC\n";
-        //std::cout << "Epoch Time: " << epoch << "\n";
-        if (topo.elevation > 0.436) { // If the Elevation Angle is above 25 degrees
-            std::cout << "Time at Observer: " << dt << std::endl;
-            std::cout << topo << std::endl;
-            std::cout << geo << " " << std::endl;
-        }
-        
-        // Increment time by 1 minute
-        now_time_t += 60;  // Add 60 second
-        now_tm = std::gmtime(&now_time_t);  // Update now_tm with new time
+            if (topo.elevation > 0.436) { // If the Elevation Angle is above 25 degrees
+                std::cout << tle << std::endl;
+                std::cout << "Time at Observer: " << dt << std::endl;
+                std::cout << topo << std::endl;
+                observableSatellites++;
+            }
     }
+    std::cout << "Number of Observerable satellites: " << observableSatellites << std::endl;
 
     return 0;
 }
