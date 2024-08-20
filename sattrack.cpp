@@ -87,6 +87,7 @@ int main() {
                 std::cout << tle << std::endl;
                 std::cout << "Time at Observer: " << dt << std::endl;
                 std::cout << topo << std::endl;
+                std::cout << std::endl;
                 observableSatellites++;
             }
     }
