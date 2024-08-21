@@ -48,6 +48,10 @@ std::vector<libsgp4::Tle> createTLEVector(std::string fileName) {
     return result;
 }
 
+libsgp4::Observer getGPSdata() {
+    
+}
+
 int main() {
     int observableSatellites = 0;
     //Get TLEs from TLE.txt and put into Array
