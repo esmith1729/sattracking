@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <string>
+#include <cstring>
 #include <chrono>
 #include <vector>
 #include "SGP4\libsgp4\SGP4.h"
@@ -46,6 +47,25 @@ std::vector<libsgp4::Tle> createTLEVector(std::string fileName) {
         }
     }    
     return result;
+}
+
+libsgp4::Observer getGPSdata() {
+    std::string line;
+    char* element;
+    std::string latitude;
+    std::string longitute;
+    std::string altitude;
+    std::string gpgga = "$GPGGA";
+
+    std::ifstream file("output.nmea");
+    if(!file.is_open()) {
+        std::cerr << "Unable to open file" << std::endl;
+    }
+    while (std::getline(file, line)) {
+        if(line[4] == 'G') {
+            auto fields = strtok(element,",");
+        }
+    }    
 }
 
 int main() {
